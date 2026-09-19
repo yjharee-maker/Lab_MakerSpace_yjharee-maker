@@ -231,4 +231,5 @@ def add_loan(member_id, equipment_id, checkout_date):
     return loan_id
 
 if __name__ == "__main__":
-    create_tables()
+    print(get_members())
+    print(get_equipment())

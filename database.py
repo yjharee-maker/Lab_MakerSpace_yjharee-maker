@@ -231,6 +231,7 @@ def add_loan(member_id, equipment_id, checkout_date):
     return loan_id
 
 def get_loans():
+    """List all loans."""
     connection = sqlite3.connect("makerspace.db")
     cursor = connection.cursor()
 
@@ -239,5 +240,60 @@ def get_loans():
     connection.close()
     return loans
 
+def return_loan(loan_id, return_date):
+    """When the loan is checked back in."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            SELECT equipment_id, return_date
+            FROM loans
+            WHERE id = ?
+            """,
+            (loan_id,)
+        )
+    loan = cursor.fetchone()
+
+    if loan is None:
+        connection.close()
+        return None
+
+    equipment_id, existing_return_date = loan
+
+    if existing_return_date is not None:
+        connection.close()
+        return None
+
+    cursor.execute(
+            """
+            UPDATE loans
+            SET return_date = ?
+            WHERE id = ?
+            """,
+            (return_date, loan_id)
+        )
+
+    cursor.execute(
+            """
+            UPDATE equipment
+            SET quantity = quantity + 1,
+                available = 1
+            WHERE id = ?
+            """,
+            (equipment_id,)
+        )
+
+    connection.commit()
+    connection.close()
+    return True
+
 if __name__ == "__main__":
+    print(get_members())
+    print(get_equipment())
     print(get_loans())
+    loan_id = input("loan ID:")
+    return_date = input("return date:")
+    print(return_loan(loan_id, return_date))
+    print(get_loans())
+    print(get_equipment())

@@ -70,10 +70,36 @@ def get_members():
 
     return members
 
+def update_member(member_id, name, email):
+    """Update a member's name and email."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            UPDATE members
+            SET name = ?, email = ?
+            WHERE id = ?
+            """,
+            (name, email, member_id)
+        )
+
+    connection.commit()
+
+    updated = cursor.rowcount
+
+    connection.close()
+
+    return updated
+
 if __name__ == "__main__":
     create_tables()
 
-    members = get_members()
+    print(get_members())
 
-    for member in members:
-        print(member)
+    member_id = input("member_id:")
+    name = input("name:")
+    email = input("email:")
+    update_member(member_id, name, email)
+
+    print(get_members())

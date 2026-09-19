@@ -230,6 +230,14 @@ def add_loan(member_id, equipment_id, checkout_date):
     connection.close()
     return loan_id
 
+def get_loans():
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM loans")
+    loans = cursor.fetchall()
+    connection.close()
+    return loans
+
 if __name__ == "__main__":
-    print(get_members())
-    print(get_equipment())
+    print(get_loans())

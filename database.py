@@ -92,14 +92,38 @@ def update_member(member_id, name, email):
 
     return updated
 
+def delete_member(member_id):
+    """Delete a member from the database."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            "DELETE FROM members WHERE id = ?",
+            (member_id,)
+        )
+
+    connection.commit()
+
+    deleted = cursor.rowcount
+
+    connection.close()
+
+    return deleted
+
 if __name__ == "__main__":
     create_tables()
 
     print(get_members())
 
-    member_id = input("member_id:")
     name = input("name:")
     email = input("email:")
-    update_member(member_id, name, email)
+
+    add_member(name, email)
+
+    print(get_members())
+
+    member_id = input("member_id:")
+    
+    delete_member(member_id)
 
     print(get_members())

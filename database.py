@@ -23,6 +23,7 @@ def create_tables():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 category TEXT NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1,
                 available INTEGER NOT NULL DEFAULT 1
             )
             """)
@@ -110,17 +111,17 @@ def delete_member(member_id):
 
     return deleted
 
-def add_equipment(name, category, available=1):
+def add_equipment(name, category, quantity=1):
     """Add new equipment to the database."""
     connection = sqlite3.connect("makerspace.db")
     cursor = connection.cursor()
 
     cursor.execute(
             """
-            INSERT INTO equipment (name, category, available)
+            INSERT INTO equipment (name, category, quantity)
             VALUES (?, ?, ?)
             """,
-            (name, category, available)
+            (name, category, quantity)
         )
 
     connection.commit()
@@ -144,7 +145,7 @@ def get_equipment():
 
     return equipment
 
-def update_equipment(equipment_id, name, category, available=1):
+def update_equipment(equipment_id, name, category, quantity=1):
     """Update an equipment's name, category and availability."""
     connection = sqlite3.connect("makerspace.db")
     cursor = connection.cursor()
@@ -152,10 +153,10 @@ def update_equipment(equipment_id, name, category, available=1):
     cursor.execute(
             """
             UPDATE equipment
-            SET name = ?, category = ?, available = ?
+            SET name = ?, category = ?, quantity = ?
             WHERE id = ?
             """,
-            (name, category, available, equipment_id)
+            (name, category, quantity, equipment_id)
         )
 
     connection.commit()
@@ -177,10 +178,57 @@ def delete_equipment(equipment_id):
     connection.close()
     return deleted
 
+def add_loan(member_id, equipment_id, checkout_date):
+    """Create a new equipment loan."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+    cursor.execute(
+            "SELECT id FROM members WHERE id = ?",
+            (member_id,)
+        )
+    member = cursor.fetchone()
+
+    if member is None:
+        connection.close()
+        return None
+    cursor.execute(
+            """
+            SELECT id FROM equipment
+            WHERE id = ? AND available = 1
+            """,
+            (equipment_id,)
+        )
+    equipment = cursor.fetchone()
+
+    if equipment is None:
+        connection.close()
+        return None
+
+    cursor.execute(
+            """
+            INSERT INTO loans (member_id, equipment_id, checkout_date)
+            VALUES (?, ?, ?)
+            """,
+            (member_id, equipment_id, checkout_date)
+        )
+
+    cursor.execute(
+            """
+            UPDATE equipment
+            SET quantity = quantity - 1,
+                available = CASE
+                    WHEN quantity - 1 = 0 THEN 0
+                    ELSE 1
+                END
+            WHERE id = ?
+            """,
+            (equipment_id,)
+        )
+
+    connection.commit()
+    loan_id = cursor.lastrowid
+    connection.close()
+    return loan_id
+
 if __name__ == "__main__":
-    print(get_equipment())
-    equipment_id = input("equipment ID:")
-    name = input("name:")
-    category = input("category:")
-    update_equipment(equipment_id, name, category)
-    print(get_equipment())
+    create_tables()

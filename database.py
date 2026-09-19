@@ -163,11 +163,26 @@ def update_equipment(equipment_id, name, category, available=1):
     connection.close
     return updated
 
+def delete_equipment(equipment_id):
+    """Delete equipment from database."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            "DELETE FROM equipment WHERE id = ?",
+            (equipment_id,)
+        )
+    connection.commit()
+    deleted = cursor.rowcount
+    connection.close()
+    return deleted
+
 if __name__ == "__main__":
     print(get_equipment())
     name = input("name:")
     category = input("category:")
-    available = input("available:")
-    equipment_id = input("equipment_ID:")
-    update_equipment(equipment_id, name, category, available)
+    add_equipment(name, category)
+    print(get_equipment())
+    equipment_id = input("equipment_id:")
+    delete_equipment(equipment_id)
     print(get_equipment())

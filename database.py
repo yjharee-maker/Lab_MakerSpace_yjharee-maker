@@ -131,14 +131,20 @@ def add_equipment(name, category, available=1):
     
     return equipment_id
 
-if __name__ == "__main__":
-    create_tables()
+def get_equipment():
+    """Return all the equipment from database."""
 
-    name = input("name:")
-    category = input("category:")
-    available = input("available:")
-    if available == "":
-        equipment_id = add_equipment(name, category)
-    else:
-        equipment_id = add_equipment(name, category, available)
-    print("New equipment ID:", equipment_id)
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM equipment")
+    equipment = cursor.fetchall()
+
+    connection.close()
+
+    return equipment
+
+if __name__ == "__main__":
+    equipments = get_equipment()
+    for equipment in equipments:
+        print(equipment)

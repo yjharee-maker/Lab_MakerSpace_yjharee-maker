@@ -58,10 +58,22 @@ def add_member(name, email):
 
     return member_id
 
+def get_members():
+    """Return all the members from the database."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM members")
+    members = cursor.fetchall()
+
+    connection.close()
+
+    return members
+
 if __name__ == "__main__":
     create_tables()
 
-    name = input("name:")
-    email = input("email:")
-    member_id = add_member(name, email)
-    print("New member ID:", member_id)
+    members = get_members()
+
+    for member in members:
+        print(member)

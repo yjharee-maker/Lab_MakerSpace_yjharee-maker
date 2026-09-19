@@ -41,3 +41,27 @@ def create_tables():
     
     connection.commit()
     connection.close()
+
+def add_member(name, email):
+    """Add a new member to the database."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            "INSERT INTO members (name, email) VALUES (?, ?)",
+            (name, email)
+        )
+
+    connection.commit()
+    member_id = cursor.lastrowid
+    connection.close()
+
+    return member_id
+
+if __name__ == "__main__":
+    create_tables()
+
+    name = input("name:")
+    email = input("email:")
+    member_id = add_member(name, email)
+    print("New member ID:", member_id)

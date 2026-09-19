@@ -179,10 +179,8 @@ def delete_equipment(equipment_id):
 
 if __name__ == "__main__":
     print(get_equipment())
+    equipment_id = input("equipment ID:")
     name = input("name:")
     category = input("category:")
-    add_equipment(name, category)
-    print(get_equipment())
-    equipment_id = input("equipment_id:")
-    delete_equipment(equipment_id)
+    update_equipment(equipment_id, name, category)
     print(get_equipment())

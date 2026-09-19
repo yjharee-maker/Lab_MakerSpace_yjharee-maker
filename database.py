@@ -110,20 +110,35 @@ def delete_member(member_id):
 
     return deleted
 
+def add_equipment(name, category, available=1):
+    """Add new equipment to the database."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            INSERT INTO equipment (name, category, available)
+            VALUES (?, ?, ?)
+            """,
+            (name, category, available)
+        )
+
+    connection.commit()
+
+    equipment_id = cursor.lastrowid
+
+    connection.close()
+    
+    return equipment_id
+
 if __name__ == "__main__":
     create_tables()
 
-    print(get_members())
-
     name = input("name:")
-    email = input("email:")
-
-    add_member(name, email)
-
-    print(get_members())
-
-    member_id = input("member_id:")
-    
-    delete_member(member_id)
-
-    print(get_members())
+    category = input("category:")
+    available = input("available:")
+    if available == "":
+        equipment_id = add_equipment(name, category)
+    else:
+        equipment_id = add_equipment(name, category, available)
+    print("New equipment ID:", equipment_id)

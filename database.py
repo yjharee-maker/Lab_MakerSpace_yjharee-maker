@@ -144,7 +144,30 @@ def get_equipment():
 
     return equipment
 
+def update_equipment(equipment_id, name, category, available=1):
+    """Update an equipment's name, category and availability."""
+    connection = sqlite3.connect("makerspace.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+            """
+            UPDATE equipment
+            SET name = ?, category = ?, available = ?
+            WHERE id = ?
+            """,
+            (name, category, available, equipment_id)
+        )
+
+    connection.commit()
+    updated = cursor.rowcount
+    connection.close
+    return updated
+
 if __name__ == "__main__":
-    equipments = get_equipment()
-    for equipment in equipments:
-        print(equipment)
+    print(get_equipment())
+    name = input("name:")
+    category = input("category:")
+    available = input("available:")
+    equipment_id = input("equipment_ID:")
+    update_equipment(equipment_id, name, category, available)
+    print(get_equipment())

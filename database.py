@@ -2,6 +2,7 @@
 """Contains SQLite connection, schema creation, and SQL helpers."""
 
 import sqlite3
+from models import Member, Equipment, Loan
 
 
 def create_tables():
@@ -65,9 +66,15 @@ def get_members():
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM members")
-    members = cursor.fetchall()
+    rows = cursor.fetchall()
 
     connection.close()
+
+    members = []
+
+    for row in rows:
+        member = Member(row[0], row[1], row[2])
+        members.append(member)
 
     return members
 
@@ -139,11 +146,23 @@ def get_equipment():
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM equipment")
-    equipment = cursor.fetchall()
+    rows = cursor.fetchall()
 
     connection.close()
 
-    return equipment
+    equipment_list = []
+
+    for row in rows:
+        equipment = Equipment(
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4]
+            )
+        eqipment_list.append(equipment)
+
+    return equipment_list
 
 def update_equipment(equipment_id, name, category, quantity=1):
     """Update an equipment's name, category and availability."""
@@ -236,8 +255,19 @@ def get_loans():
     cursor = connection.cursor()
 
     cursor.execute("SELECT * FROM loans")
-    loans = cursor.fetchall()
+    rows = cursor.fetchall()
     connection.close()
+    loans = []
+
+    for row in rows:
+        loan = Loan(
+                row[0],
+                row[1],
+                row[2],
+                row[3],
+                row[4]
+            )
+        loans.append(loan)
     return loans
 
 def return_loan(loan_id, return_date):

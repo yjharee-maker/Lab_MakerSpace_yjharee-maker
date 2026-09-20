@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """The main interface of the system."""
 
-from database import create_tables
+from database import create_tables, add_member
 
 
 def main():
@@ -29,6 +29,14 @@ def main():
         if choice == "0":
             print("Thank you for using our service! \nGoodBye!")
             break
+        elif choice == "1":
+            name = input("Enter member name: ")
+            email = input("Enter member email: ")
+
+            member_id = add_member(name, email)
+
+            print("Member registered successfully!")
+            print("Member ID: ", member_id)
 
 if __name__ == "__main__":
     main()

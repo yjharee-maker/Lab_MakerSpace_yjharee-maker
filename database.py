@@ -287,13 +287,3 @@ def return_loan(loan_id, return_date):
     connection.commit()
     connection.close()
     return True
-
-if __name__ == "__main__":
-    print(get_members())
-    print(get_equipment())
-    print(get_loans())
-    loan_id = input("loan ID:")
-    return_date = input("return date:")
-    print(return_loan(loan_id, return_date))
-    print(get_loans())
-    print(get_equipment())

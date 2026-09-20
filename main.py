@@ -1,7 +1,20 @@
 #!/usr/bin/python3
 """The main interface of the system."""
 
-from database import create_tables, add_member
+from database import (
+        create_tables,
+        add_member,
+        get_members,
+        update_member,
+        delete_member,
+        add_equipment,
+        get_equipment,
+        update_equipment,
+        delete_equipment,
+        add_loan,
+        get_loans,
+        return_loan
+    )
 
 
 def main():
@@ -37,6 +50,25 @@ def main():
 
             print("Member registered successfully!")
             print("Member ID: ", member_id)
+        elif choice == "2":
+            members = get_members()
+
+            if not members:
+                print("No members found.")
+            else:
+                for member in members:
+                    print(member)
+        elif choice == "3":
+            member_id = int(input("Enter member ID: "))
+            name = input("new name: ")
+            email = input("new email: ")
+
+            updated = update_member(member_id, name, email)
+
+            if updated:
+                print("Member updated successfully.")
+            else:
+                print("Member not found.")
 
 if __name__ == "__main__":
     main()

@@ -3,7 +3,60 @@
 
 from database import create_tables
 from models import Member, Equipment, Loan
+from datetime import datetime
 
+def get_text(prompt):
+    """Avoid empty text."""
+    while True:
+        value = input(prompt).strip()
+
+        if value:
+            return value
+
+        print("Input cannot be empty.")
+
+def get_email(prompt):
+    """Ask the user for a valid email address."""
+    while True:
+        email = input(prompt).strip()
+
+        if "@" in email and "." in email.split("@")[-1]:
+            return email
+
+        print("Please enter a valid email address.")
+
+def get_date(prompt):
+    """Ask the user for a valid date in YYYY-MM-DD format."""
+    while True:
+        date = input(prompt)
+
+        try:
+            datetime.strptime(date, "%Y-%m-%d")
+            if valid_date.date() > datetime.today().date():
+                print("Date cannot be in the future.")
+            else:
+                return date
+        
+        except ValueError:
+            print("Please enter a valid date in YYYY-MM-DD format.")
+
+def get_integer(prompt):
+    """Ask the user for an integer and keep asking until valid."""
+    while True:
+        try:
+            return int(input(prompt))
+        except ValueError:
+            print("Please enter a valid number.")
+
+def get_pos_int(prompt):
+    """Ask the user for a positive integer."""
+    while True:
+        value = get_integer(prompt)
+
+        if value >= 0:
+            return value
+
+        print("Please enter a number greater or equal to 0.")
 
 def main():
     """ Run the system."""
@@ -31,15 +84,17 @@ def main():
             print("Thank you for using our service! \nGoodBye!")
             break
         elif choice == "1":
-            name = input("Enter member name: ")
-            email = input("Enter member email: ")
+            name = get_text("Enter member name: ")
+            email = get_email("Enter member email: ")
 
             member = Member(None, name, email)
-            member.save()
+            if member.save():
+                print("Member registered successfully.")
+                print("Member ID:", member.member_id)
+            else:
+                print("A member with that email already exists.")
 
-            print("Member registered successfully.")
-            print("Member ID:", member.member_id)
-         elif choice == "2":
+        elif choice == "2":
             members = Member.get_all()
 
             if not members:
@@ -48,7 +103,7 @@ def main():
                 for member in members:
                     print(member)
         elif choice == "3":
-            member_id = int(input("Enter member ID: "))
+            member_id = get_pos_int("Enter member ID: ")
 
             member = Member.search_by_id(member_id)
 
@@ -58,11 +113,13 @@ def main():
                 name = input("Enter new name: ")
                 email = input("Enter new email: ")
 
-                member.update(name, email)
+                if member.update(name, email):
+                    print("Member updated successfully.")
+                else:
+                    print("A member with that email already exists.")
 
-                print("Member updated successfully.")
         elif choice == "4":
-            member_id = int(input("Enter member ID: "))
+            member_id = get_pos_int("Enter member ID: ")
 
             member = Member.search_by_id(member_id)
 
@@ -72,9 +129,9 @@ def main():
                 member.delete()
                 print("Member deleted successfully.")
         elif choice == "5":
-            name = input("Enter equipment name: ")
-            category = input("Enter equipment category: ")
-            quantity = int(input("Enter quantity: "))
+            name = get_text("Enter equipment name: ")
+            category = get_text("Enter equipment category: ")
+            quantity = get_pos_int("Enter quantity: "))
 
             equipment = Equipment(
                 None,
@@ -97,7 +154,7 @@ def main():
                 for equipment in equipment_list:
                     print(equipment)
         elif choice == "7":
-            equipment_id = int(input("Enter equipment ID: "))
+            equipment_id = get_pos_int("Enter equipment ID: "))
 
             equipment = Equipment.search_by_id(equipment_id)
 
@@ -106,13 +163,13 @@ def main():
             else:
                 name = input("Enter new equipment name: ")
                 category = input("Enter new equipment category: ")
-                quantity = int(input("Enter new quantity: "))
+                quantity = get_pos_int("Enter new quantity: "))
 
                 equipment.update(name, category, quantity)
 
                 print("Equipment updated successfully.")
         elif choice == "8":
-            equipment_id = int(input("Enter equipment ID: "))
+            equipment_id = get_pos_int("Enter equipment ID: "))
 
             equipment = Equipment.search_by_id(equipment_id)
 
@@ -122,9 +179,9 @@ def main():
                 equipment.delete()
                 print("Equipment deleted successfully.")
         elif choice == "9":
-            member_id = int(input("Enter member ID: "))
-            equipment_id = int(input("Enter equipment ID: "))
-            checkout_date = input("Enter checkout date: ")
+            member_id = get_pos_int("Enter member ID: "))
+            equipment_id = get_pos_int("Enter equipment ID: "))
+            checkout_date = get_date("Enter checkout date: ")
 
             loan = Loan(
                 None,
@@ -140,8 +197,8 @@ def main():
             else:
                 print("Unable to create loan.")
         elif choice == "10":
-            loan_id = int(input("Enter loan ID: "))
-            return_date = input("Enter return date: ")
+            loan_id = get_pos_int("Enter loan ID: "))
+            return_date = get_date("Enter return date: ")
 
             loan = Loan.search_by_id(loan_id)
 
@@ -152,7 +209,23 @@ def main():
             elif loan.return_loan(return_date):
                 print("Equipment returned successfully.")
             else:
+                checkout_date = datetime.strptime(
+                    loan.checkout_date,
+                    "%Y-%m-%d"
+                ).date()
+
+                return_date_value = datetime.strptime(
+                    return_date,
+                    "%Y-%m-%d"
+                ).date()
+
+            if return_date_value < checkout_date:
+                print("Return date cannot be before checkout date.")
+            elif loan.return_loan(return_date):
+                print("Equipment returned successfully.")
+            else:
                 print("Unable to return equipment.")
+
         elif choice == "11":
             while True:
                 print("\nSearch")
@@ -176,7 +249,7 @@ def main():
                     break
 
                 elif search_choice == "1":
-                    member_id = int(input("Enter member ID: "))
+                    member_id = get_pos_int("Enter member ID: "))
                     member = Member.search_by_id(member_id)
 
                     if member is None:
@@ -185,7 +258,7 @@ def main():
                         print(member)
 
                 elif search_choice == "2":
-                    name = input("Enter member name: ")
+                    name = get_text("Enter member name: ")
                     members = Member.search_by_name(name)
 
                     if not members:
@@ -195,7 +268,7 @@ def main():
                             print(member)
 
                 elif search_choice == "3":
-                    email = input("Enter member email: ")
+                    email = get_email("Enter member email: ")
                     members = Member.search_by_email(email)
 
                     if not members:
@@ -205,9 +278,7 @@ def main():
                             print(member)
 
                 elif search_choice == "4":
-                    equipment_id = int(
-                        input("Enter equipment ID: ")
-                    )
+                    equipment_id = get_pos_int("Enter equipment ID: ")
                     equipment = Equipment.search_by_id(equipment_id)
 
                     if equipment is None:
@@ -216,7 +287,7 @@ def main():
                         print(equipment)
 
                 elif search_choice == "5":
-                    name = input("Enter equipment name: ")
+                    name = get_text("Enter equipment name: ")
                     equipment_list = Equipment.search_by_name(name)
 
                     if not equipment_list:
@@ -226,7 +297,7 @@ def main():
                             print(equipment)
 
                 elif search_choice == "6":
-                    category = input("Enter equipment category: ")
+                    category = get_text("Enter equipment category: ")
                     equipment_list = Equipment.search_by_category(
                         category
                     )
@@ -238,7 +309,7 @@ def main():
                             print(equipment)
 
                 elif search_choice == "7":
-                    loan_id = int(input("Enter loan ID: "))
+                    loan_id = get_pos_int("Enter loan ID: ")
                     loan = Loan.search_by_id(loan_id)
 
                     if loan is None:
@@ -247,7 +318,7 @@ def main():
                         print(loan)
 
                 elif search_choice == "8":
-                    member_id = int(input("Enter member ID: "))
+                    member_id = get_pos_int("Enter member ID: ")
                     loans = Loan.search_by_member_id(member_id)
 
                     if not loans:
@@ -257,9 +328,7 @@ def main():
                             print(loan)
 
                 elif search_choice == "9":
-                    equipment_id = int(
-                        input("Enter equipment ID: ")
-                    )
+                    equipment_id = get_pos_int("Enter equipment ID: ")
                     loans = Loan.search_by_equipment_id(
                         equipment_id
                     )
@@ -271,7 +340,7 @@ def main():
                             print(loan)
 
                 elif search_choice == "10":
-                    checkout_date = input(
+                    checkout_date = get_date(
                         "Enter checkout date: "
                     )
                     loans = Loan.search_by_checkout_date(
@@ -285,7 +354,7 @@ def main():
                             print(loan)
 
                 elif search_choice == "11":
-                    return_date = input(
+                    return_date = get_date(
                         "Enter return date: "
                     )
                     loans = Loan.search_by_return_date(
@@ -317,7 +386,7 @@ def main():
                 print("3. Equipment loan history")
                 print("0. Back to main menu")
 
-                report_choice = input("Choose a report option: ")
+                report_choice = get_pos_int("Choose a report option: ")
 
                 if report_choice == "0":
                     break
@@ -332,7 +401,7 @@ def main():
                             print(loan)
 
                 elif report_choice == "2":
-                    member_id = int(input("Enter member ID: "))
+                    member_id = get_pos_int("Enter member ID: "))
                     loans = Loan.member_history(member_id)
 
                     if not loans:
@@ -342,9 +411,7 @@ def main():
                             print(loan)
 
                 elif report_choice == "3":
-                    equipment_id = int(
-                        input("Enter equipment ID: ")
-                    )
+                    equipment_id = get_pos_int("Enter equipment ID: ")
                     loans = Loan.equipment_history(equipment_id)
 
                     if not loans:

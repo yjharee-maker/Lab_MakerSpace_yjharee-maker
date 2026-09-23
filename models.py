@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 from database import get_connection
+import sqlite3
+
 """Create classes for each table."""
 
 
@@ -16,18 +18,24 @@ class Member:
         connection = get_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-                """
-                INSERT INTO members (name, email)
-                VALUES (?, ?)
-                """,
-                (self.name, self.email)
-            )
-        connection.commit
-        self.member_id = cursor.lastrowid
-        connection.close()
+        try:
+            cursor.execute(
+                    """
+                    INSERT INTO members (name, email)
+                    VALUES (?, ?)
+                    """,
+                    (self.name, self.email)
+                )
+            connection.commit()
+            self.member_id = cursor.lastrowid
+            return self.member_id
 
-        return self.member_id
+        except sqlite3.IntegrityError:
+            connection.rollback()
+            return False
+
+        finally:
+            connection.close()
 
     @classmethod
     def get_all(cls):
@@ -51,25 +59,31 @@ class Member:
         """Update this member in the database."""
         connection = get_connection()
         cursor = connection.cursor()
+        
+        try:
+            cursor.execute(
+                """
+                UPDATE members
+                SET name = ?, email = ?
+                WHERE id = ?
+                """,
+                (name, email, self.member_id)
+            )
 
-        cursor.execute(
-            """
-            UPDATE members
-            SET name = ?, email = ?
-            WHERE id = ?
-            """,
-            (name, email, self.member_id)
-        )
+            connection.commit()
+            updated = cursor.rowcount
 
-        connection.commit()
-        updated = cursor.rowcount
-        connection.close()
+            if updated:
+                self.name = name
+                self.email = email
 
-        if updated:
-            self.name = name
-            self.email = email
+            return updated
+        except sqlite3.IntegrityError:
+            connection.rollback()
+            return False
 
-        return updated
+        finally:
+            connection.close()
 
     def delete(self):
         """Delete this member from the database."""

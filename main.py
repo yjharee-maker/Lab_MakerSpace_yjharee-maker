@@ -4,6 +4,7 @@
 from database import create_tables
 from models import Member, Equipment, Loan
 from datetime import datetime
+import os
 
 def get_text(prompt):
     """Avoid empty text."""
@@ -31,7 +32,7 @@ def get_date(prompt):
         date = input(prompt)
 
         try:
-            datetime.strptime(date, "%Y-%m-%d")
+            valid_date = datetime.strptime(date, "%Y-%m-%d")
             if valid_date.date() > datetime.today().date():
                 print("Date cannot be in the future.")
             else:
@@ -83,6 +84,7 @@ def main():
         if choice == "0":
             print("Thank you for using our service! \nGoodBye!")
             break
+        
         elif choice == "1":
             name = get_text("Enter member name: ")
             email = get_email("Enter member email: ")
@@ -102,6 +104,7 @@ def main():
             else:
                 for member in members:
                     print(member)
+        
         elif choice == "3":
             member_id = get_pos_int("Enter member ID: ")
 
@@ -128,10 +131,11 @@ def main():
             else:
                 member.delete()
                 print("Member deleted successfully.")
+        
         elif choice == "5":
             name = get_text("Enter equipment name: ")
             category = get_text("Enter equipment category: ")
-            quantity = get_pos_int("Enter quantity: "))
+            quantity = get_pos_int("Enter quantity: ")
 
             equipment = Equipment(
                 None,
@@ -145,6 +149,7 @@ def main():
 
             print("Equipment registered successfully.")
             print("Equipment ID:", equipment.equipment_id)
+        
         elif choice == "6":
             equipment_list = Equipment.get_all()
 
@@ -153,8 +158,9 @@ def main():
             else:
                 for equipment in equipment_list:
                     print(equipment)
+        
         elif choice == "7":
-            equipment_id = get_pos_int("Enter equipment ID: "))
+            equipment_id = get_pos_int("Enter equipment ID: ")
 
             equipment = Equipment.search_by_id(equipment_id)
 
@@ -163,13 +169,14 @@ def main():
             else:
                 name = input("Enter new equipment name: ")
                 category = input("Enter new equipment category: ")
-                quantity = get_pos_int("Enter new quantity: "))
+                quantity = get_pos_int("Enter new quantity: ")
 
                 equipment.update(name, category, quantity)
 
                 print("Equipment updated successfully.")
+        
         elif choice == "8":
-            equipment_id = get_pos_int("Enter equipment ID: "))
+            equipment_id = get_pos_int("Enter equipment ID: ")
 
             equipment = Equipment.search_by_id(equipment_id)
 
@@ -178,26 +185,37 @@ def main():
             else:
                 equipment.delete()
                 print("Equipment deleted successfully.")
+        
         elif choice == "9":
-            member_id = get_pos_int("Enter member ID: "))
-            equipment_id = get_pos_int("Enter equipment ID: "))
+            member_id = get_pos_int("Enter member ID: ")
+            equipment_id = get_pos_int("Enter equipment ID: ")
             checkout_date = get_date("Enter checkout date: ")
-
-            loan = Loan(
+            
+            member = Member.search_by_id(member_id)
+            equipment = Equipment.search_by_id(equipment_id)
+            if member is None:
+                print("Member not found.")
+            elif equipment is None:
+                print("Equipment not found.")
+            elif not equipment.is_available():
+                print("Equipment is not available.")
+            else:
+                loan = Loan(
                 None,
                 member_id,
                 equipment_id,
                 checkout_date,
                 None
-            )
+                )
 
             if loan.save():
                 print("Equipment checked out successfully.")
                 print("Loan ID:", loan.loan_id)
             else:
                 print("Unable to create loan.")
+
         elif choice == "10":
-            loan_id = get_pos_int("Enter loan ID: "))
+            loan_id = get_pos_int("Enter loan ID: ")
             return_date = get_date("Enter return date: ")
 
             loan = Loan.search_by_id(loan_id)
@@ -206,25 +224,23 @@ def main():
                 print("Loan not found.")
             elif not loan.is_active():
                 print("This loan has already been returned.")
-            elif loan.return_loan(return_date):
-                print("Equipment returned successfully.")
             else:
                 checkout_date = datetime.strptime(
                     loan.checkout_date,
                     "%Y-%m-%d"
-                ).date()
+                    ).date()
 
                 return_date_value = datetime.strptime(
                     return_date,
                     "%Y-%m-%d"
-                ).date()
+                    ).date()
 
-            if return_date_value < checkout_date:
-                print("Return date cannot be before checkout date.")
-            elif loan.return_loan(return_date):
-                print("Equipment returned successfully.")
-            else:
-                print("Unable to return equipment.")
+                if return_date_value < checkout_date:
+                    print("Return date cannot be before checkout date.")
+                elif loan.return_loan(return_date):
+                    print("Equipment returned successfully.")
+                else:
+                    print("Unable to return equipment.")
 
         elif choice == "11":
             while True:
@@ -249,7 +265,7 @@ def main():
                     break
 
                 elif search_choice == "1":
-                    member_id = get_pos_int("Enter member ID: "))
+                    member_id = get_pos_int("Enter member ID: ")
                     member = Member.search_by_id(member_id)
 
                     if member is None:
@@ -368,7 +384,7 @@ def main():
                             print(loan)
 
                 elif search_choice == "12":
-                    loans = Loan.search_active()
+                    loans = Loan.current_loans()
 
                     if not loans:
                         print("No active loans found.")
@@ -378,6 +394,7 @@ def main():
 
                 else:
                     print("Invalid search option.")
+        
         elif choice == "12":
             while True:
                 print("\nReports")
@@ -388,39 +405,82 @@ def main():
 
                 report_choice = get_pos_int("Choose a report option: ")
 
-                if report_choice == "0":
+                if report_choice == 0:
                     break
 
-                elif report_choice == "1":
+                elif report_choice == 1:
                     loans = Loan.current_loans()
 
                     if not loans:
                         print("No current loans.")
                     else:
-                        for loan in loans:
-                            print(loan)
+                        os.makedirs("reports", exist_ok=True)
 
-                elif report_choice == "2":
-                    member_id = get_pos_int("Enter member ID: "))
+                        with open(
+                            "reports/current_loans.txt",
+                            "w",
+                            encoding="utf-8"
+                        ) as file:
+                            for loan in loans:
+                                file.write("{}\n".format(loan))
+
+                        print(
+                            "Report exported to "
+                            "reports/current_loans.txt"
+                        )
+
+                elif report_choice == 2:
+                    member_id = get_pos_int("Enter member ID: ")
                     loans = Loan.member_history(member_id)
 
                     if not loans:
                         print("No loan history found.")
                     else:
-                        for loan in loans:
-                            print(loan)
+                        os.makedirs("reports", exist_ok=True)
 
-                elif report_choice == "3":
+                        filename = "reports/member_{}_history.txt".format(
+                            member_id
+                        )
+
+                        with open(
+                            filename,
+                            "w",
+                            encoding="utf-8"
+                        ) as file:
+                            for loan in loans:
+                                file.write("{}\n".format(loan))
+
+                        print("Report exported to {}".format(filename))
+
+                elif report_choice == 3:
                     equipment_id = get_pos_int("Enter equipment ID: ")
                     loans = Loan.equipment_history(equipment_id)
 
                     if not loans:
                         print("No loan history found.")
                     else:
-                        for loan in loans:
-                            print(loan)
+                        os.makedirs("reports", exist_ok=True)
+
+                        filename = (
+                            "reports/equipment_{}_history.txt"
+                            .format(equipment_id)
+                        )
+
+                        with open(
+                            filename,
+                            "w",
+                            encoding="utf-8"
+                        ) as file:
+                            for loan in loans:
+                                file.write("{}\n".format(loan))
+
+                        print("Report exported to {}".format(filename))
 
                 else:
                     print("Invalid report option.")
+        
         else:
             print("Please choose a valid option.")
+
+if __name__ == "__main__":
+    main()

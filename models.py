@@ -41,7 +41,7 @@ class Member:
     def get_all(cls):
         """Return all members from the database."""
         connection = get_connection()
-        cursor = connection.cursor
+        cursor = connection.cursor()
 
         cursor.execute("SELECT * FROM members")
         rows = cursor.fetchall()
@@ -141,7 +141,7 @@ class Member:
 
         return members
 
-        @classmethod
+    @classmethod
     def search_by_email(cls, email):
         """Search for members by email."""
         connection = get_connection()
